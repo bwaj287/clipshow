@@ -24,8 +24,11 @@ dependencies = [
 
 [project.optional-dependencies]
 semantic = [
-    "onnx_clip",
+    "onnx_clip>=4.0.1,<5",
     "onnxruntime",
+    "numpy>=1.24,<2",
+    "opencv-python-headless>=4.8,<4.12",
+    "pillow>=10.1,<11",
 ]
 emotion = [
     "onnxruntime",
@@ -34,8 +37,11 @@ audiovisual = [
     "onnxruntime",
 ]
 all = [
-    "onnx_clip",
+    "onnx_clip>=4.0.1,<5",
     "onnxruntime",
+    "numpy>=1.24,<2",
+    "opencv-python-headless>=4.8,<4.12",
+    "pillow>=10.1,<11",
 ]
 test = [
     "pytest>=7.0",

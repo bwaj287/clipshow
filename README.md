@@ -1,5 +1,13 @@
 # ClipShow
 
+## Travel-vlog fork
+
+This fork adds a local, review-first travel workflow with same-day photo
+candidates, full-window scoring, a pinned/checksummed CLIP backend, and
+archive-catalog day whitelisting. See [the workflow](docs/travel-vlog-review.md)
+and [validation status](docs/implementation-status.md). It does not replace
+manual story/crop review or the downstream five-minute vlog renderer.
+
 ClipShow is a desktop app that turns your raw video clips into a highlight reel automatically. Point it at your footage, and it finds the most interesting moments using scene changes, audio peaks, motion, and optional AI-powered content analysis, then stitches them together into a single video.
 
 ## How It Works

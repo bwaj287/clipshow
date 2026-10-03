@@ -41,3 +41,8 @@ models/
 
 # Static ffmpeg binaries (downloaded during Flatpak build)
 ffmpeg-bin/
+
+# Private local travel media and review artifacts
+local-media/
+local-review/
+*.onnx

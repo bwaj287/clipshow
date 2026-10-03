@@ -35,7 +35,9 @@ SAMPLE_FPS = 2  # Sample 2 frames per second
 # Sigmoid normalization parameters for CLIP cosine similarities.
 # Raw scores are typically 0.15-0.35 for real matches; this sigmoid
 # stretches that range to fill [0, 1] with good contrast.
-_SIGMOID_CENTER = 0.25
+# This is a POSITIVE MINUS NEGATIVE margin, not a raw cosine similarity.
+# Keep the scale absolute so a uniformly irrelevant clip cannot score 1.0.
+_SIGMOID_CENTER = 0.03
 _SIGMOID_SCALE = 20.0
 
 # Temporal smoothing window size in score samples (not seconds).
@@ -62,12 +64,14 @@ class SemanticDetector(Detector):
         self._prompts = prompts or DEFAULT_PROMPTS
         self._negative_prompts = negative_prompts or DEFAULT_NEGATIVE_PROMPTS
         self._time_step = time_step
+        if time_step <= 0:
+            raise ValueError("time_step must be positive")
         self._model = None
 
     def _load_model(self):
         """Lazy-load the CLIP model via onnx_clip."""
         try:
-            onnx_clip = importlib.import_module("onnx_clip")
+            importlib.import_module("onnx_clip")
         except ImportError:
             raise RuntimeError(
                 "onnx_clip is not installed. Install with: "
@@ -79,7 +83,10 @@ class SemanticDetector(Detector):
 
         ort.set_default_logger_severity(3)  # 3 = ERROR only
         MODEL_DIR.mkdir(parents=True, exist_ok=True)
-        self._model = onnx_clip.OnnxClip(batch_size=1)
+        # onnx_clip's original S3 weights bucket is no longer available.
+        # Keep dependency validation above, but use checksum-verified exports.
+        from clipshow.detection.local_clip import LocalClip
+        self._model = LocalClip(batch_size=8)
         return self._model
 
     def detect(
@@ -109,6 +116,8 @@ class SemanticDetector(Detector):
         neg_embeddings = model.get_text_embeddings(self._negative_prompts)
 
         frame_idx = 0
+        sample_times = []
+        sample_scores = []
         while True:
             if cancel_flag and cancel_flag():
                 break
@@ -134,8 +143,8 @@ class SemanticDetector(Detector):
                 score = float(np.clip(score, 0.0, 1.0))
 
                 t = frame_idx / fps
-                idx = min(int(t / self._time_step), num_samples - 1)
-                scores[idx] = max(scores[idx], score)
+                sample_times.append(t)
+                sample_scores.append(score)
 
                 if progress_callback:
                     progress_callback(frame_idx / max(total_frames, 1))
@@ -144,14 +153,24 @@ class SemanticDetector(Detector):
 
         cap.release()
 
+        # Fill the timeline between measured samples. The old implementation
+        # left four zero-valued holes between every pair of 2 FPS samples.
+        if sample_times:
+            target_times = np.arange(num_samples) * self._time_step
+            scores = np.interp(target_times, sample_times, sample_scores)
+            # Cancellation/decode failure must not extrapolate the final good
+            # frame through the entire unobserved remainder of the video.
+            observed_end = min(duration, frame_idx / fps)
+            scores[target_times >= observed_end] = 0.0
+
         # Temporal smoothing to reduce single-frame noise
         if len(scores) >= _SMOOTH_WINDOW:
             scores = uniform_filter1d(scores, size=_SMOOTH_WINDOW)
 
-        # Final normalization to [0, 1]
-        max_val = scores.max()
-        if max_val > 0:
-            scores = scores / max_val
+        # Do not normalize by this video's maximum: that promotes the best
+        # frame of a completely irrelevant video into a guaranteed highlight.
+        if sample_times:
+            scores[np.arange(num_samples) * self._time_step >= observed_end] = 0.0
 
         if progress_callback:
             progress_callback(1.0)
