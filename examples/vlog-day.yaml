@@ -1,0 +1,28 @@
+# All four engines are enabled in Vlog mode. This is not the legacy GUI config.
+day: '2026-08-20'
+catalog: ../local-media/video_catalog.csv
+photo_dir: ../local-media/photos/2026-08-20
+output_dir: ../vlog-output
+ffmpeg: ffmpeg
+ffprobe: ffprobe
+autocut_repo: ../.vlog-tools/AutoCut
+videohighlighter_repo: ../.vlog-tools/VideoHighlighter
+ollama_host: http://127.0.0.1:11434
+ollama_model: qwen3.8:27b
+music: null # Supply a local, decodable MP3/FLAC/WAV; no KGM decoder is bundled.
+target_seconds: 600
+encoder: libx264 # h264_nvenc is available when NVIDIA FFmpeg supports it.
+threshold: 0.55
+shot_seconds: 10
+ideal_shot: 7
+min_shot: 3
+photo_seconds: 8
+transition: 0.3
+katna_frames: 8
+candidates_per_video: 3
+vision_limit: 48
+keep_dialogue: []
+# Protected ranges include the dissolve handle; the final transition overlap
+# must be after the last complete word. No ASR guesses become subtitles.
+# keep_dialogue:
+#   - {clip_id: BANFF-D02-001, start: 10.0, end: 30.3}

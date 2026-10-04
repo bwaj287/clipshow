@@ -54,6 +54,7 @@ test = [
 
 [project.scripts]
 clipshow = "clipshow.__main__:main"
+clipshow-vlog = "clipshow.vlog:main"
 
 [tool.setuptools.packages.find]
 include = ["clipshow*"]

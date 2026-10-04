@@ -21,8 +21,16 @@ Changes in this fork:
 - `python -m clipshow.catalog_review` filters the archive catalog to one day,
   analyzes low-resolution proxies, and exports full-day coarse contact sheets.
   These are review candidates, not approved shots or finished videos.
-- Candidate review/export is separate from the existing five-minute 9:16 vlog
-  renderer. This fork does not yet implement that renderer or audio mixing.
+- The new `clipshow-vlog` compiler integrates real Katna, ONNX CLIP,
+  VideoHighlighter local vision and AutoCut selection/beat analysis calls.
+  It has its own portrait photo/video renderer, protected dialogue windows,
+  independent crossfaded BGM loops and full-decoded audio/video QC.
+  It does not change defaults in the classic GUI/general auto pipeline.
+
+See [the compiler workflow](vlog-compiler.md) for installation, stages,
+evidence files and limitations, and [upstream boundaries](vlog-upstreams.md)
+for pinned versions and license notices.
+Completed integration checks are recorded in [validation](vlog-validation.md).
 
 Unit tests validate mechanics, NOT artistic highlight quality. Real camera
 roll, fingers appearing briefly, redundancy across clips and the final portrait

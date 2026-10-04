@@ -45,6 +45,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Path to a YAML pipeline configuration file",
     )
     parser.add_argument(
+        "--vlog-config",
+        type=str,
+        default=None,
+        help="Run the integrated local Vlog compiler with a YAML configuration",
+    )
+    parser.add_argument(
+        "--vlog-stage",
+        choices=["doctor", "analyze", "plan", "render", "all"],
+        default="all",
+        help="Integrated Vlog stage (default: all four engines plus local preview)",
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
@@ -57,6 +69,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+
+    if args.vlog_config:
+        from clipshow.vlog import main as vlog_main
+
+        return vlog_main([args.vlog_config, "--stage", args.vlog_stage])
 
     if args.auto:
         from clipshow.app import run_auto_mode

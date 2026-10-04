@@ -46,3 +46,9 @@ ffmpeg-bin/
 local-media/
 local-review/
 *.onnx
+
+# External engine checkouts, local config/media/models and compilation outputs
+.vlog-tools/
+vlog.local.yaml
+vlog-output/
+clipped/
