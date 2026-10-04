@@ -137,7 +137,7 @@ def test_photo_dialogue_chunk_boundaries_and_long_music(tmp_path):
                 end=source_start + span + config.transition,
             )
             if n == 4:
-                candidate.update(protected=True, audio="dialogue")
+                candidate.update(protected=True, audio="dialogue", zoom=1.14, crop_x=0.5, crop_y=0)
         candidates.append(candidate)
         plan.append(
             dict(

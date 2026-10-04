@@ -133,6 +133,18 @@ def clip(request):
     return {"engine": "clipshow.CLIP", "status": "OK", "result": result}
 
 
+def crop_review_frame(frame, candidate):
+    """Apply explicit, modest framing consistently to AI samples and render."""
+    zoom = candidate.get("zoom", 1)
+    x, y = candidate.get("crop_x", 0.5), candidate.get("crop_y", 0.5)
+    if not 1 <= zoom <= 1.5 or not 0 <= x <= 1 or not 0 <= y <= 1:
+        raise ValueError("Invalid reviewed framing")
+    height, width = frame.shape[:2]
+    cw, ch = max(2, int(width / zoom) // 2 * 2), max(2, int(height / zoom) // 2 * 2)
+    left, top = round((width - cw) * x), round((height - ch) * y)
+    return frame[top : top + ch, left : left + cw]
+
+
 def vision(request):
     from urllib.parse import urlsplit
 
@@ -168,6 +180,7 @@ def vision(request):
                     ok, frame = cap.read()
                     if not ok:
                         raise RuntimeError(f"Missing vision frame at {timestamp}")
+                    frame = crop_review_frame(frame, candidate)
                     images.append(Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
             finally:
                 cap.release()

@@ -663,6 +663,9 @@ class Compiler:
                     "protected": True,
                     "audio": "dialogue",
                     "score": 1.0,
+                    "zoom": finite(dialogue.get("zoom", 1), "dialogue zoom", 1, 1.5),
+                    "crop_x": finite(dialogue.get("crop_x", 0.5), "dialogue crop_x", 0, 1),
+                    "crop_y": finite(dialogue.get("crop_y", 0.5), "dialogue crop_y", 0, 1),
                 }
             )
         # Give each source a first look before spending the vision budget on its

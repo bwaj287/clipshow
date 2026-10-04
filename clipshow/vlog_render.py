@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageFilter, ImageOps
 
-from clipshow.vlog import file_identity, fingerprint, json_write, validate_timeline
+from clipshow.vlog import file_identity, fingerprint, finite, json_write, validate_timeline
 
 FPS = 30000 / 1001
 
@@ -229,6 +229,14 @@ def render(compiler):
                     f"crop={width}:{height},gblur=sigma=20[blur];"
                     f"[f]scale={width}:{height}:force_original_aspect_ratio=decrease[sharp];"
                     "[blur][sharp]overlay=(W-w)/2:(H-h)/2,setsar=1,setpts=PTS-STARTPTS"
+                )
+            zoom = finite(shot.get("zoom", 1), "reviewed zoom", 1, 1.5)
+            x = finite(shot.get("crop_x", 0.5), "reviewed crop_x", 0, 1)
+            y = finite(shot.get("crop_y", 0.5), "reviewed crop_y", 0, 1)
+            if zoom > 1:
+                vf = (
+                    f"crop=w='trunc(iw/{zoom}/2)*2':h='trunc(ih/{zoom}/2)*2':"
+                    f"x='(iw-ow)*{x}':y='(ih-oh)*{y}'," + vf
                 )
         if shot["audio"] == "dialogue":
             audio = [

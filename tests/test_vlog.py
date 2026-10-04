@@ -5,6 +5,7 @@ import csv
 import json
 from pathlib import Path
 
+import numpy as np
 import pytest
 import yaml
 
@@ -355,3 +356,20 @@ def test_vlog_cli_routes_without_starting_gui(monkeypatch):
     monkeypatch.setattr("clipshow.vlog.main", lambda args: received.append(args) or 0)
     assert main(["--vlog-config", "vlog.yaml", "--vlog-stage", "analyze"]) == 0
     assert received == [["vlog.yaml", "--stage", "analyze"]]
+
+
+def test_explicit_dialogue_crop_removes_only_reviewed_edges():
+    from clipshow.vlog_worker import crop_review_frame
+
+    frame = np.zeros((200, 100, 3), dtype=np.uint8)
+    frame[-16:] = 255  # Synthetic bottom-edge lens obstruction.
+    result = crop_review_frame(frame, {"zoom": 1.14, "crop_x": 0.5, "crop_y": 0})
+    assert result.shape == (174, 86, 3)
+    assert not result.any()
+
+
+def test_invalid_review_framing_is_not_applied():
+    from clipshow.vlog_worker import crop_review_frame
+
+    with pytest.raises(ValueError):
+        crop_review_frame(np.zeros((20, 20, 3), dtype=np.uint8), {"zoom": 0})

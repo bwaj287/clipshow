@@ -92,11 +92,15 @@ For complete dialogue, explicitly review/list source bounds:
 ```yaml
 keep_dialogue:
   - {clip_id: BANFF-D02-001, start: 10.0, end: 30.3}
+  # Optional modest crop, e.g. remove an edge intrusion without inventing pixels:
+  - {clip_id: BANFF-D02-002, start: 40.0, end: 60.3, zoom: 1.14, crop_y: 0}
 ```
 
 Bounds must include the outgoing dissolve handle **after the last word**.
 These manual ranges bypass coarse Katna/CLIP rejection but still receive local
-vision inspection. The compiler does not yet transcribe, detect complete
+vision inspection. Explicit `zoom` (1..1.5) and `crop_x`/`crop_y` (0..1)
+are applied consistently to the sampled AI frames and the rendered picture;
+they default to uncropped center framing. The compiler does not yet transcribe, detect complete
 sentences, auto-select dialogue, or invent subtitles. Dialogue uses conservative
 wind/noise filtering, compression and BGM ducking; heavily clipped wind cannot
 be perfectly repaired. Other source sound is muted rather than letting wind
