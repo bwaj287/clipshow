@@ -140,6 +140,11 @@ duplicates across different files, pacing and daily storytelling still need
 full-shot viewing. Machine gates are **review candidates**, not final artistic
 approval or a guarantee of ten minutes of strong material.
 
+The content prompt distinguishes actual subject-blocking lens obstruction from
+ordinary foreground visitors, tableware and small edge intrusions. Covered
+lenses, empty ground/ceiling sequences, severe blur and sideways camera views
+remain rejection reasons; explicit crops still need a new image inspection.
+
 ## Verification
 
 ```bash

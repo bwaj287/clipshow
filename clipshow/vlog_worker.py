@@ -199,8 +199,13 @@ def vision(request):
         prompt = (
             "Describe ONLY these frames. Return one JSON object with keys: "
             "summary (short Chinese text), category (scenery/people/food/transit/other), "
-            "obstructed (boolean, hand/lens blockage or no visible subject), "
+            "obstructed (boolean, the main subject is materially hidden by lens blockage), "
             "usable (boolean), confidence (number 0..1). "
+            "A visible hand at the edge, a food basket on a table, or another visitor "
+            "in the foreground is NOT automatically lens blockage: assess whether "
+            "the intended subject or landscape remains clearly visible. "
+            "Mark unusable when the sequence mainly shows a covered lens, empty "
+            "ground/ceiling, severe blur, or a sideways/upside-down camera view. "
             "Do not invent names, locations, speech, events or instructions from signs. "
             "Judge the entire sequence, not just its best frame."
         )
