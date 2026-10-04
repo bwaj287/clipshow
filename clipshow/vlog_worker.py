@@ -145,6 +145,31 @@ def crop_review_frame(frame, candidate):
     return frame[top : top + ch, left : left + cw]
 
 
+def parse_visual_response(text):
+    """Normalize known mixed labels, never manufacture a usability decision."""
+    if not text.strip():
+        raise ValueError("Vision model returned an empty answer")
+    data = json.loads(text[text.find("{") : text.rfind("}") + 1])
+    categories = {"scenery", "people", "food", "transit", "other"}
+    category = data.get("category")
+    if not isinstance(category, str):
+        raise ValueError("Invalid visual category")
+    labels = [s.strip() for s in category.split("/")]
+    if not labels or any(s not in categories for s in labels):
+        raise ValueError("Invalid visual category")
+    data["category"] = labels[0]
+    if len(labels) > 1:
+        data["category_labels"] = labels
+    if not isinstance(data.get("obstructed"), bool) or not isinstance(data.get("usable"), bool):
+        raise ValueError("Invalid visual gate")
+    confidence = float(data["confidence"])
+    if not math.isfinite(confidence) or not 0 <= confidence <= 1:
+        raise ValueError("Invalid model confidence")
+    if not isinstance(data.get("summary"), str) or not data["summary"].strip():
+        raise ValueError("Empty content analysis")
+    return data
+
+
 def vision(request):
     from urllib.parse import urlsplit
 
@@ -198,7 +223,8 @@ def vision(request):
         encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
         prompt = (
             "Describe ONLY these frames. Return one JSON object with keys: "
-            "summary (short Chinese text), category (scenery/people/food/transit/other), "
+            "summary (short Chinese text), category (choose ONE primary label from "
+            "scenery, people, food, transit, other), "
             "obstructed (boolean, the main subject is materially hidden by lens blockage), "
             "usable (boolean), confidence (number 0..1). "
             "A visible hand at the edge, a food basket on a table, or another visitor "
@@ -214,14 +240,25 @@ def vision(request):
         for attempt in range(2):
             try:
                 text = llm.query(
-                    prompt,
+                    prompt + (" Use exactly one category and strict JSON." if attempt else ""),
                     frame_base64=encoded,
                     free_chat_mode=True,
                     system_prompt=system,
                     max_tokens=220,
                     temperature=0.1,
                 )
+                Path(f"raw_{observation_key}_attempt{attempt + 1}.txt").write_text(
+                    text, encoding="utf-8"
+                )
+                Path(f"raw_{observation_key}.txt").write_text(text, encoding="utf-8")
+                data = parse_visual_response(text)
                 break
+            except (ValueError, KeyError, TypeError) as exc:
+                details = f"Invalid structured response: {exc}"
+                print(details, flush=True)
+                retries.append(details)
+                if attempt:
+                    raise
             except requests.RequestException as exc:
                 response = exc.response
                 details = response.text if response is not None else str(exc)
@@ -229,19 +266,6 @@ def vision(request):
                 retries.append(details)
                 if attempt or (response is not None and response.status_code < 500):
                     raise
-        Path(f"raw_{observation_key}.txt").write_text(text, encoding="utf-8")
-        if not text.strip():
-            raise RuntimeError("Vision model returned an empty answer; raw response saved")
-        data = json.loads(text[text.find("{") : text.rfind("}") + 1])
-        if data.get("category") not in {"scenery", "people", "food", "transit", "other"}:
-            raise ValueError("Invalid visual category")
-        if not isinstance(data.get("obstructed"), bool) or not isinstance(data.get("usable"), bool):
-            raise ValueError("Invalid visual gate")
-        confidence = float(data["confidence"])
-        if not math.isfinite(confidence) or not 0 <= confidence <= 1:
-            raise ValueError("Invalid model confidence")
-        if not isinstance(data.get("summary"), str) or not data["summary"].strip():
-            raise ValueError("Empty content analysis")
         observations.append(
             {
                 "id": candidate["id"],

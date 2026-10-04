@@ -9,7 +9,7 @@ Checks completed:
 
 - `pip check`: no broken requirements.
 - Existing application and new compiler tests, including the real FFmpeg
-  synthetic renderer regression: 519 passed, 21 optional tests skipped.
+  synthetic renderer regression: 525 passed, 21 optional tests skipped.
 - Wheel packaging: successful.
 - Full repository Python lint and changed-file whitespace checks: successful.
 - Actual Day2 analysis smoke test: three catalog videos and the same-day photo
@@ -27,6 +27,9 @@ Checks completed:
 - Explicit dialogue edge cropping: AI inspection and rendering use the same
   reviewed framing. Unit tests reject invalid zoom and verify removal of an
   edge intrusion; the real FFmpeg regression exercises the modest crop.
+- Visual response compatibility: known mixed labels retain their label list
+  without changing an actual model veto. Unknown labels, non-boolean gates,
+  non-finite confidence and empty summaries still fail structured validation.
 
 The test fixtures validate mechanics, not highlight aesthetics, wind removal
 quality or storytelling. The local Day2 inspection was explicitly a subset;

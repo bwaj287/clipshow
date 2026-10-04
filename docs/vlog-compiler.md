@@ -134,6 +134,10 @@ unreviewed windows and audio ending early stop the pipeline. One transient
 local HTTP failure can be retried and is recorded, not counted as successful
 content inspection. Valid fenced JSON is accepted: VideoHighlighter's default
 opening-code-fence stop rule is disabled only inside its isolated worker.
+Known mixed category labels retain the complete label list and raw answer while
+using the first label as primary. This never changes the model's obstruction or
+usability verdict. Invalid structured output receives one recorded retry, then
+fails closed.
 
 Frames are sampled, not every frame understood. Brief occlusions, camera roll,
 duplicates across different files, pacing and daily storytelling still need

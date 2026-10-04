@@ -373,3 +373,41 @@ def test_invalid_review_framing_is_not_applied():
 
     with pytest.raises(ValueError):
         crop_review_frame(np.zeros((20, 20, 3), dtype=np.uint8), {"zoom": 0})
+
+
+def test_mixed_visual_labels_keep_actual_model_veto():
+    from clipshow.vlog_worker import parse_visual_response
+
+    data = dict(
+        summary="Visitors by a mountain coach",
+        category="scenery/people/transit",
+        usable=False,
+        obstructed=True,
+        confidence=0.95,
+    )
+    result = parse_visual_response("```json\n" + json.dumps(data) + "\n```")
+    assert result["category"] == "scenery"
+    assert result["category_labels"] == ["scenery", "people", "transit"]
+    assert result["usable"] is False
+    assert result["obstructed"] is True
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"category": "scenery/unknown"},
+        {"usable": "yes"},
+        {"obstructed": 0},
+        {"confidence": float("nan")},
+        {"summary": ""},
+    ],
+)
+def test_invalid_visual_output_still_fails_closed(change):
+    from clipshow.vlog_worker import parse_visual_response
+
+    data = dict(
+        summary="Actual picture", category="scenery", usable=True, obstructed=False, confidence=0.95
+    )
+    data.update(change)
+    with pytest.raises(ValueError):
+        parse_visual_response(json.dumps(data))
